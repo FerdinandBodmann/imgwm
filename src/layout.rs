@@ -21,11 +21,13 @@ pub struct Window {
 }
 
 /// Layout manager for tiling windows
+#[derive(Debug, Clone)]
 pub struct LayoutManager {
     windows: Vec<Window>,
     layout_mode: LayoutMode,
     screen_width: u32,
     screen_height: u32,
+    master_ratio: f32,
 }
 
 impl LayoutManager {
@@ -35,6 +37,7 @@ impl LayoutManager {
             layout_mode: LayoutMode::Tile,
             screen_width,
             screen_height,
+            master_ratio: 0.6,
         }
     }
 
@@ -63,8 +66,7 @@ impl LayoutManager {
             return;
         }
 
-        let master_ratio = 0.6; // Master area takes 60% of width
-        let master_width = (self.screen_width as f32 * master_ratio) as u32;
+        let master_width = (self.screen_width as f32 * self.master_ratio) as u32;
         let stack_width = self.screen_width - master_width;
 
         // Master window (first window)
@@ -121,6 +123,22 @@ impl LayoutManager {
         };
         info!("Switched to layout: {:?}", self.layout_mode);
         self.relayout();
+    }
+
+    pub fn inc_master_ratio(&mut self) {
+        self.master_ratio = (self.master_ratio + 0.05).min(0.95);
+        info!("Master ratio increased to {:.2}", self.master_ratio);
+        self.relayout();
+    }
+
+    pub fn dec_master_ratio(&mut self) {
+        self.master_ratio = (self.master_ratio - 0.05).max(0.05);
+        info!("Master ratio decreased to {:.2}", self.master_ratio);
+        self.relayout();
+    }
+
+    pub fn get_master_ratio(&self) -> f32 {
+        self.master_ratio
     }
 
     pub fn focus_next(&mut self) {
